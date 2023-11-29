@@ -205,21 +205,21 @@ class Fire(Object):
             self.animation_count = 0
 
 
-def get_background(name):
-    image = pygame.image.load(join(PATH, "Background", name))
-    _, _, width, height = image.get_rect()
+def get_background(name):       #TD: Background Function thats going to return how many tiles we need to draw 
+    image = pygame.image.load(join(PATH, "Background", name))   #TD: collects the assets path, within the background subfolder and name variable representing filename
+    _, _, width, height = image.get_rect()          #TD: get_rect() Collects the X & Y values needed for each tile
     tiles = []
 
-    for i in range(WIDTH // width + 1):
-        for j in range(HEIGHT // height + 1):
-            pos = (i * width, j * height)
-            tiles.append(pos)
+    for i in range(WIDTH // width + 1):         
+        for j in range(HEIGHT // height + 1):       #TD: Basically divides the number tiles needed in the X & Y and adds 1 so there is no empy space
+            pos = (i * width, j * height)           #TD: Creates a tuple of the x,y and needed for the entire window 
+            tiles.append(pos)                       #TD: inserts the amount of tiles needed from the position calculation variable
 
-    return tiles, image
-
+    return tiles, image                             #TD: now we can use the image and tiles outside of the function
+                                                    #TD: In summary the function will take a background image from my computers memory and divides it into tiles. The function will also calculate the position of these tiles in order to be used later on
 
 def draw(window, background, bg_image, player, objects, offset_x):
-    for tile in background:
+    for tile in background:                         #TD: loops through the back ground and gets a number for the 
         window.blit(bg_image, tile)
 
     for obj in objects:
