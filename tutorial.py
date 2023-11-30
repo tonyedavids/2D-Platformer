@@ -9,11 +9,11 @@ pygame.init()       #TD: Starts the Pygame Window
 pygame.display.set_caption("Platformer")    #TD: caption for out display window
 
 
-WIDTH, HEIGHT = 1000, 800       #TD: Dimensions of our game window
-FPS = 120            #TD: Refresh rate of our game window
-PLAYER_VEL = 6    #TD: Player Velocty, the higher the faster the character 
+WIDTH, HEIGHT = 1000, 800                                           #TD: Dimensions of our game window
+FPS = 60                                                           #TD: Refresh rate of our game window
+PLAYER_VEL = 6                                                      #TD: Player Velocty, the higher the faster the character 
 
-PATH = r'C:\Coding Projects\Python-Platformer-main\assets'          #TD: The directory that I used inorder to collect objects for game
+PATH = r'C:\Coding Projects\2D-Platformer\assets'                   #TD: The directory that I used inorder to collect objects for game
 
 window = pygame.display.set_mode((WIDTH, HEIGHT))                   #TD: Using the Width & Height variables
 
@@ -56,26 +56,26 @@ def get_block(size):
     return pygame.transform.scale2x(surface)
 
 
-class Player(pygame.sprite.Sprite):
+class Player(pygame.sprite.Sprite):                         #TD: We are using the built in pygame Sprite Class to animate and move our character
     COLOR = (255, 0, 0)
     GRAVITY = 1
     SPRITES = load_sprite_sheets("MainCharacters", "VirtualGuy", 32, 32, True)
     ANIMATION_DELAY = 3
 
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height):                #TD: This is the the first function that gets initialized as soon as the game begins
         super().__init__()
-        self.rect = pygame.Rect(x, y, width, height)
-        self.x_vel = 0
-        self.y_vel = 0
-        self.mask = None
-        self.direction = "left"
-        self.animation_count = 0
-        self.fall_count = 0
-        self.jump_count = 0
-        self.hit = False
-        self.hit_count = 0
+        self.rect = pygame.Rect(x, y, width, height)        #TD: Basically the players rectangle hitbox, lots of built in Pygame functions are being used
+        self.x_vel = 0                                      #TD: Speed in the x direction
+        self.y_vel = 0                                      #TD: Speed in the y direction
+        self.mask = None                                    #TD: 
+        self.direction = "left"                             #TD: When the game gets initialized, the characters direction begins by facing the left
+        self.animation_count = 0                            #TD: When the game gets initialized, the characcters animation count begins at 0
+        self.fall_count = 0                                 #TD: When the game begins, the fall count starts at zero 
+        self.jump_count = 0                                 #TD: When the game begins, the jump count is also zero  
+        self.hit = False                                    #TD: When the game starts the character is NOT being hit
+        self.hit_count = 0                                  #TD: When the game starts the character hit count is at zero
 
-    def jump(self):
+    def jump(self):                                         
         self.y_vel = -self.GRAVITY * 8
         self.animation_count = 0
         self.jump_count += 1
@@ -83,25 +83,25 @@ class Player(pygame.sprite.Sprite):
             self.fall_count = 0
 
     def move(self, dx, dy):
-        self.rect.x += dx
-        self.rect.y += dy
+        self.rect.x += dx                                   #TD: Some calculus, basically adding a change in the X direction
+        self.rect.y += dy                                   #TD: Adding Some change in the Y direction
 
     def make_hit(self):
         self.hit = True
 
     def move_left(self, vel):
-        self.x_vel = -vel
+        self.x_vel = -vel                                   #TD: Some Physics, essentially a left movement is a negative velocity movement
         if self.direction != "left":
             self.direction = "left"
             self.animation_count = 0
 
     def move_right(self, vel):
-        self.x_vel = vel
+        self.x_vel = vel                                    #TD: Movement in the right
         if self.direction != "right":
             self.direction = "right"
             self.animation_count = 0
 
-    def loop(self, fps):
+    def loop(self, fps):                                    #TD: Movements are doing to
         self.y_vel += min(1, (self.fall_count / fps) * self.GRAVITY)
         self.move(self.x_vel, self.y_vel)
 
@@ -205,9 +205,9 @@ class Fire(Object):
             self.animation_count = 0
 
 
-def get_background(name):       #TD: Background Function thats going to return how many tiles we need to draw 
+def get_background(name):                                       #TD: Background Function thats going to return how many tiles we need to draw 
     image = pygame.image.load(join(PATH, "Background", name))   #TD: collects the assets path, within the background subfolder and name variable representing filename
-    _, _, width, height = image.get_rect()          #TD: get_rect() Collects the X & Y values needed for each tile
+    _, _, width, height = image.get_rect()                      #TD: get_rect() Collects the X & Y values needed for each tile
     tiles = []
 
     for i in range(WIDTH // width + 1):         
@@ -219,7 +219,7 @@ def get_background(name):       #TD: Background Function thats going to return h
                                                     #TD: In summary the function will take a background image from my computers memory and divides it into tiles. The function will also calculate the position of these tiles in order to be used later on
 
 def draw(window, background, bg_image, player, objects, offset_x):
-    for tile in background:                         #TD: loops through the back ground and gets a number for the 
+    for tile in background:                         #TD: loops through the back ground and gets an emount of tiles oer background
         window.blit(bg_image, tile)
 
     for obj in objects:
