@@ -2,7 +2,7 @@ import os       #TD: Operating System Module that lets us connect to computer
 import random   #TD: Random Module for numbers
 import math     #TD: Math Module for numbers
 import pygame
-from asyncio import wait    #TD: ATTEMPT TO TRY AND ADD WAITS BEFORE ENDING PYGAME
+from asyncio import wait    #TD: ATTEMPT TO TRY AND ADD WAITS BEFO RE ENDING PYGAME
 from os import listdir 
 from os.path import isfile, join
 pygame.init()       #TD: Starts the Pygame Window
