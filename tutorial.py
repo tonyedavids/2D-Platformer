@@ -51,7 +51,7 @@ def get_block(size):
     path = join(PATH, "Terrain", "Terrain.png")
     image = pygame.image.load(path).convert_alpha()
     surface = pygame.Surface((size, size), pygame.SRCALPHA, 32)
-    rect = pygame.Rect(96, 0, size, size)
+    rect = pygame.Rect(96, 64, size, size)
     surface.blit(image, (0, 0), rect)
     return pygame.transform.scale2x(surface)
 
@@ -287,12 +287,29 @@ def main(window):       #TD: Main code for the actual game
     block_size = 96
 
     player = Player(100, 100, 50, 50)
-    fire = Fire(100, HEIGHT - block_size - 64, 16, 32)
+
+    # Add a staircase and extend the map space
+    staircase_width = 5  # Width of the staircase
+    staircase_height = 5  # Height of the staircase
+
+    floor = [
+        Block(i * block_size, HEIGHT - block_size, block_size)
+        for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)
+    ]
+
+# Add a staircase to the floor
+    for i in range(staircase_width):
+        for j in range(staircase_height):
+            floor.append(Block(i * block_size + j * block_size, HEIGHT - block_size * (j + 1), block_size))
+
+    for i in range(5):
+        floor.append(Block((i + staircase_width) * block_size, HEIGHT - block_size * 6, block_size))
+
+    objects = [*floor]
+
+    fire = Fire((staircase_width + 5) * block_size, HEIGHT - block_size - 64, 16, 32)
     fire.on()
-    floor = [Block(i * block_size, HEIGHT - block_size, block_size)
-             for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)]
-    objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),
-               Block(block_size * 3, HEIGHT - block_size * 4, block_size), fire]
+    objects.append(fire)
 
     offset_x = 0
     scroll_area_width = 200
@@ -321,7 +338,6 @@ def main(window):       #TD: Main code for the actual game
 
     pygame.quit()
     quit()
-
 
 if __name__ == "__main__":
     main(window)
