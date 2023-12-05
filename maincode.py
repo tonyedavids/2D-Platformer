@@ -2,6 +2,7 @@ import os       #TD: Operating System Module that lets us connect to computer
 import random   #TD: Random Module for numbers
 import math     #TD: Math Module for numbers
 import pygame
+from asyncio import wait    #TD: ATTEMPT TO TRY AND ADD WAITS BEFO RE ENDING PYGAME
 from os import listdir 
 from os.path import isfile, join
 pygame.init()       #TD: Starts the Pygame Window
@@ -9,14 +10,12 @@ pygame.init()       #TD: Starts the Pygame Window
 pygame.display.set_caption("Platformer")    #TD: caption for out display window
 
 
-WIDTH, HEIGHT = 1000, 800       #TD: Dimensions of our game window
-FPS = 120            #TD: Refresh rate of our game window
-PLAYER_VEL = 6    #TD: Player Velocty, the higher the faster the character 
+WIDTH, HEIGHT = 1000, 800                                           #TD: Dimensions of our game window
+FPS = 60                                                           #TD: Refresh rate of our game window
+PLAYER_VEL = 6                                                      #TD: Player Velocty, the higher the faster the character 
 
-PATH = r'C:\Coding Projects\Python-Platformer-main\assets'          #TD: The directory that I used inorder to collect objects for game
-
+PATH = r'C:\Coding Projects\2D-Platformer\assets'                   #TD: The directory that I used inorder to collect objects for game
 window = pygame.display.set_mode((WIDTH, HEIGHT))                   #TD: Using the Width & Height variables
-
 
 def flip(sprites):
     return [pygame.transform.flip(sprite, True, False) for sprite in sprites]       
@@ -51,31 +50,31 @@ def get_block(size):
     path = join(PATH, "Terrain", "Terrain.png")
     image = pygame.image.load(path).convert_alpha()
     surface = pygame.Surface((size, size), pygame.SRCALPHA, 32)
-    rect = pygame.Rect(96, 0, size, size)
+    rect = pygame.Rect(96, 64, size, size)
     surface.blit(image, (0, 0), rect)
     return pygame.transform.scale2x(surface)
 
 
-class Player(pygame.sprite.Sprite):
+class Player(pygame.sprite.Sprite):                         #TD: We are using the built in pygame Sprite Class to animate and move our character
     COLOR = (255, 0, 0)
     GRAVITY = 1
     SPRITES = load_sprite_sheets("MainCharacters", "VirtualGuy", 32, 32, True)
     ANIMATION_DELAY = 3
 
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height):                #TD: This is the the first function that gets initialized as soon as the game begins
         super().__init__()
-        self.rect = pygame.Rect(x, y, width, height)
-        self.x_vel = 0
-        self.y_vel = 0
-        self.mask = None
-        self.direction = "left"
-        self.animation_count = 0
-        self.fall_count = 0
-        self.jump_count = 0
-        self.hit = False
-        self.hit_count = 0
+        self.rect = pygame.Rect(x, y, width, height)        #TD: Basically the players rectangle hitbox, lots of built in Pygame functions are being used
+        self.x_vel = 0                                      #TD: Speed in the x direction
+        self.y_vel = 0                                      #TD: Speed in the y direction
+        self.mask = None                                    #TD: 
+        self.direction = "left"                             #TD: When the game gets initialized, the characters direction begins by facing the left
+        self.animation_count = 0                            #TD: When the game gets initialized, the characcters animation count begins at 0
+        self.fall_count = 0                                 #TD: When the game begins, the fall count starts at zero 
+        self.jump_count = 0                                 #TD: When the game begins, the jump count is also zero  
+        self.hit = False                                    #TD: When the game starts the character is NOT being hit
+        self.hit_count = 0                                  #TD: When the game starts the character hit count is at zero
 
-    def jump(self):
+    def jump(self):                                         
         self.y_vel = -self.GRAVITY * 8
         self.animation_count = 0
         self.jump_count += 1
@@ -83,30 +82,36 @@ class Player(pygame.sprite.Sprite):
             self.fall_count = 0
 
     def move(self, dx, dy):
-        self.rect.x += dx
-        self.rect.y += dy
+        self.rect.x += dx                                   #TD: Some calculus, basically adding a change in the X direction
+        self.rect.y += dy                                   #TD: Adding Some change in the Y direction
 
     def make_hit(self):
         self.hit = True
 
     def move_left(self, vel):
-        self.x_vel = -vel
+        self.x_vel = -vel                                   #TD: Some Physics, essentially a left movement is a negative velocity movement
         if self.direction != "left":
             self.direction = "left"
             self.animation_count = 0
 
     def move_right(self, vel):
-        self.x_vel = vel
+        self.x_vel = vel                                    #TD: Movement in the right
         if self.direction != "right":
             self.direction = "right"
             self.animation_count = 0
 
-    def loop(self, fps):
+    def loop(self, fps):                                    #TD: Movements are doing to
         self.y_vel += min(1, (self.fall_count / fps) * self.GRAVITY)
         self.move(self.x_vel, self.y_vel)
 
         if self.hit:
             self.hit_count += 1
+            wait(100)
+            if self.hit_count > 20:
+                wait(100)
+                pygame.quit()
+                quit()
+
         if self.hit_count > fps * 2:
             self.hit = False
             self.hit_count = 0
@@ -151,6 +156,13 @@ class Player(pygame.sprite.Sprite):
 
     def draw(self, win, offset_x):
         win.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))
+
+    def handle_collision(self, trophy):
+        if pygame.sprite.collide_mask(self, trophy):
+            print("Player touched the trophy! Game Over!")
+            pygame.quit()
+            quit()
+
 
 
 class Object(pygame.sprite.Sprite):
@@ -205,9 +217,27 @@ class Fire(Object):
             self.animation_count = 0
 
 
-def get_background(name):       #TD: Background Function thats going to return how many tiles we need to draw 
+class Trophy(Object):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height, "trophy")
+        trophy_image = pygame.image.load(join(PATH, "Checkpoints", "Trophy.png")).convert_alpha()
+        self.image.blit(trophy_image, (0, 0))
+        self.mask = pygame.mask.from_surface(self.image)
+        self.touched = False  # TD: False if the trophy is touched
+
+    def handle_collision(self, player):
+        if pygame.sprite.collide_mask(player, self):
+            print("Player touched the trophy! Game Over!")
+            self.touched = True  # TD: Set the flag when trophy is touched
+            pygame.quit()
+            quit()
+
+    def is_touched(self):
+        return self.touched
+
+def get_background(name):                                       #TD: Background Function thats going to return how many tiles we need to draw 
     image = pygame.image.load(join(PATH, "Background", name))   #TD: collects the assets path, within the background subfolder and name variable representing filename
-    _, _, width, height = image.get_rect()          #TD: get_rect() Collects the X & Y values needed for each tile
+    _, _, width, height = image.get_rect()                      #TD: get_rect() Collects the X & Y values needed for each tile
     tiles = []
 
     for i in range(WIDTH // width + 1):         
@@ -219,7 +249,7 @@ def get_background(name):       #TD: Background Function thats going to return h
                                                     #TD: In summary the function will take a background image from my computers memory and divides it into tiles. The function will also calculate the position of these tiles in order to be used later on
 
 def draw(window, background, bg_image, player, objects, offset_x):
-    for tile in background:                         #TD: loops through the back ground and gets a number for the 
+    for tile in background:                         #TD: loops through the back ground and gets an emount of tiles oer background
         window.blit(bg_image, tile)
 
     for obj in objects:
@@ -287,18 +317,41 @@ def main(window):       #TD: Main code for the actual game
     block_size = 96
 
     player = Player(100, 100, 50, 50)
-    fire = Fire(100, HEIGHT - block_size - 64, 16, 32)
+
+    # TD: Add a staircase and extend the map space
+    staircase_width = 5  # TD: Width of the staircase
+    staircase_height = 5  # TD: Height of the staircase
+
+    floor = [
+        Block(i * block_size, HEIGHT - block_size, block_size)
+        for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)
+    ]
+
+# TD: Add a staircase to the floor
+    for i in range(staircase_width):
+        for j in range(staircase_height):
+            floor.append(Block(i * block_size + j * block_size, HEIGHT - block_size * (j + 1), block_size))
+
+    for i in range(5):
+        floor.append(Block((i + staircase_width) * block_size, HEIGHT - block_size * 6, block_size))
+
+    objects = [*floor]
+
+    fire = Fire((staircase_width + 5) * block_size, HEIGHT - block_size - 64, 16, 32)
     fire.on()
-    floor = [Block(i * block_size, HEIGHT - block_size, block_size)
-             for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)]
-    objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),
-               Block(block_size * 3, HEIGHT - block_size * 4, block_size), fire]
+    objects.append(fire)
+
+    trophy = Trophy((staircase_width + 14) * block_size, HEIGHT - block_size - 64, 75, 75)
+    objects.append(trophy)
 
     offset_x = 0
     scroll_area_width = 200
-
+    
     run = True
-    while run:
+
+    # TD: Inside the game loop
+    game_over = False  # TD: I tried to make a flag to detect if the player colllides with the character, I spent like all day trying to figure it out and it just doesnt work unfortunately 
+    while run and not game_over:
         clock.tick(FPS)
 
         for event in pygame.event.get():
@@ -315,12 +368,20 @@ def main(window):       #TD: Main code for the actual game
         handle_move(player, objects)
         draw(window, background, bg_image, player, objects, offset_x)
 
+    # TD: Check for trophy collision and set the game_over flag
+        if player.handle_collision(trophy):
+            game_over = True
+
         if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel > 0) or (
                 (player.rect.left - offset_x <= scroll_area_width) and player.x_vel < 0):
             offset_x += player.x_vel
 
+# TD: Tried to end the game after the game loop
     pygame.quit()
     quit()
+
+
+
 
 
 if __name__ == "__main__":
