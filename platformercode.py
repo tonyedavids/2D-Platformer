@@ -5,7 +5,6 @@ import pygame
 from os import listdir 
 from os.path import isfile, join
 pygame.init()       #TD: Starts the Pygame Window
-
 pygame.display.set_caption("Best Platformer")    #TD: caption for out display window
 
 
@@ -51,7 +50,7 @@ def get_block(size):                                                           #
     path = join(PATH, "Terrain", "Terrain.png")                                #CG: Creates a path to the sprite sheet for terrain
     image = pygame.image.load(path).convert_alpha()                            #CG: Using the path loads the sprites from terrain file
     surface = pygame.Surface((size, size), pygame.SRCALPHA, 32)                #CG: Creates a transparent surface for the image to be applied to 
-    rect = pygame.Rect(96, 0, size, size)                                      #CG: Creates the rectangular hitbox the blocks will be using 
+    rect = pygame.Rect(96, 64, size, size)                                      #CG: Creates the rectangular hitbox the blocks will be using 
     surface.blit(image, (0, 0), rect)                                          #CG: Pastes the image onto the surface and onto the rectangular hitbox of the block
     return pygame.transform.scale2x(surface)                                   #CG: Returns the block with its graphics and hitbox while also scaling it up by a factor of two 
 
@@ -59,7 +58,7 @@ def get_block(size):                                                           #
 class Player(pygame.sprite.Sprite):                                           #TD: We are using the built-in pygame Sprite Class to animate and move our character. CG: We use a class to define the player so that a multitude of functions can be called upon while interacting with the player
     COLOR = (255, 0, 0)                                                       #CG: Sets a basic colour to the character but will not be seen once the sprite is loaded and covers it up
     GRAVITY = 1                                                               #CG: This is the base velocity of gravity downwards
-    SPRITES = load_sprite_sheets("MainCharacters", "NinjaFrog", 32, 32, True) #CG: loads the sprite sheets for a specific character in this case ninja frog and call it true so that the sprite can face both left and right as shown in previous code of load_sprite_sheets
+    SPRITES = load_sprite_sheets("MainCharacters", "VirtualGuy", 32, 32, True) #CG: loads the sprite sheets for a specific character in this case ninja frog and call it true so that the sprite can face both left and right as shown in previous code of load_sprite_sheets
     ANIMATION_DELAY = 3                                                       #CG: The length of time it takes for the frame of a sprite to change
 
     def __init__(self, x, y, width, height):                #TD: This is the first function that gets initialized once the game begins CG: self is used for all functions under the class player to refer to functions and variables only accessible by the player class
@@ -152,6 +151,14 @@ class Player(pygame.sprite.Sprite):                                           #T
     def draw(self, win, offset_x):                                          #CG: Will draw all visual changes
         win.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))        #CG: Will draw the sprites as they are updated
 
+    def handle_collision(self, trophy):
+        if pygame.sprite.collide_mask(self, trophy):
+            print("Player touched the trophy! Game Over!")
+            pygame.quit()
+            quit()
+
+
+
 
 class Object(pygame.sprite.Sprite):                                         #CG: Object class used to define dimensions and properties of objects to be later used to allow player collision
     def __init__(self, x, y, width, height, name=None):
@@ -165,7 +172,20 @@ class Object(pygame.sprite.Sprite):                                         #CG:
     def draw(self, win, offset_x):                                          #CG: This function will draw the objects in the game and will change them when the screen scrolls or the players change position
         win.blit(self.image, (self.rect.x - offset_x, self.rect.y))
 
+class Trophy(Object):                                                       #TD: Trophy Class 
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height, "trophy")
+        trophy_image = pygame.image.load(join(PATH, "Checkpoints", "Trophy.png")).convert_alpha()
+        self.image.blit(trophy_image, (0, 0))
+        self.mask = pygame.mask.from_surface(self.image)
+        self.touched = False                                                # TD: False if the trophy is touched
 
+    def handle_collision(self, player):
+        if pygame.sprite.collide_mask(player, self):
+            print("Player touched the trophy! Game Over!")
+            self.touched = True                                             # TD: Set the flag when trophy is touched
+            pygame.quit()
+            quit()
 class Block(Object):                                                        #CG: Class for the blocks/terrain the player will stand on using the properties from the object class above
     def __init__(self, x, y, size):
         super().__init__(x, y, size, size)                                  #CG: Initializes parent class. Uses size twice to make the block a square
@@ -280,48 +300,79 @@ def handle_move(player, objects):                              #CG: This functio
             player.make_hit()
 
 
-def main(window):                                       #TD: Main code for the actual game
-    clock = pygame.time.Clock()                         #CG: regulates how fast the game will run
-    background, bg_image = get_background("Gray.png")   #CG: Will call background based on asset name in this case we use the gray background
+def main(window):       #TD: Main code for the actual game
+    clock = pygame.time.Clock()
+    background, bg_image = get_background("Gray.png")
 
-    block_size = 96                                     #CG: This is the standard size for all of the blocks
+    block_size = 96
 
-    player = Player(100, 100, 50, 50)                   #CG: Creates a basic block character with given x and y coordinates and width and height
-    fire = Fire(100, HEIGHT - block_size - 64, 16, 32)  #CG: Creates an obstacle for the player
-    fire.on()                                           #CG: For this case, fire will always be on but can be turned off and on if we wanted using previous functions
-    floor = [Block(i * block_size, HEIGHT - block_size, block_size)          #CG: This will draw as many blocks to fill two times the length of the screen with blocks 
-             for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)]
-    objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),        #CG:Creates  a block on top of the floor  
-               Block(block_size * 3, HEIGHT - block_size * 4, block_size), fire] #CG: Creates a block in the air
+    player = Player(100, 100, 50, 50)
 
-    offset_x = 0                                                          #CG: Variable that will be altered to allow scrolling objects and players: This variable affects the draw function of every class as I will not be adding a comment about offset per class
-    scroll_area_width = 200                                               #CG: Variable used to determine how far from the edge of the screen the player has to be before the screen scrolls
+    # TD: Add a staircase and extend the map space
+    staircase_width = 5  # TD: Width of the staircase
+    staircase_height = 5  # TD: Height of the staircase
 
+    floor = [
+        Block(i * block_size, HEIGHT - block_size, block_size)
+        for i in range(-WIDTH // block_size, (WIDTH * 2) // block_size)
+    ]
+
+# TD: Add a staircase to the floor
+    for i in range(staircase_width):
+        for j in range(staircase_height):
+            floor.append(Block(i * block_size + j * block_size, HEIGHT - block_size * (j + 1), block_size))
+
+    for i in range(5):
+        floor.append(Block((i + staircase_width) * block_size, HEIGHT - block_size * 6, block_size))
+
+    objects = [*floor]
+
+    fire = Fire((staircase_width + 5) * block_size, HEIGHT - block_size - 64, 16, 32)
+    fire.on()
+    objects.append(fire)
+
+    trophy = Trophy((staircase_width + 14) * block_size, HEIGHT - block_size - 64, 75, 75)
+    objects.append(trophy)
+
+    offset_x = 0
+    scroll_area_width = 200
+    
     run = True
-    while run:
-        clock.tick(FPS)                                                    #CG: using line 284 will set the speed of the game to the FPS so it won't run too fast or too slow
 
-        for event in pygame.event.get():                                   #CG: for event checks for specific events or action taken
-            if event.type == pygame.QUIT:                                  #CG: This checks that in the event of the player exiting the game the program is stopped
+    # TD: Inside the game loop
+    game_over = False  # TD: I tried to make a flag to detect if the player colllides with the character, I spent like all day trying to figure it out and it just doesnt work unfortunately 
+    while run and not game_over:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 run = False
-                break                                                      #CG: Break is used to exit the loop as soon as run=False so that the computer does not keep checking for pygame.Quit
+                break
 
-            if event.type == pygame.KEYDOWN:                               #CG: Checks if a key was pressed
-                if event.key == pygame.K_SPACE and player.jump_count < 2:  #CG: IF the space bar is pressed and the player has performed less than two jumps execute the jump function
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and player.jump_count < 2:
                     player.jump()
 
-        player.loop(FPS)                                                   #CG: Need to call the loop function as it is what moves the player and it is set to refresh and move the character at the same rate as our declared framerate of 60
-        fire.loop()                                                        #CG: Illustrates loop for fire animation
-        handle_move(player, objects)                                       #CG: This will call the movement function and apply it to the character and objects
-        draw(window, background, bg_image, player, objects, offset_x)      #CG: This line will call the draw function and will display the objects, background and character in the game
+        player.loop(FPS)
+        fire.loop()
+        handle_move(player, objects)
+        draw(window, background, bg_image, player, objects, offset_x)
 
-        if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel > 0) or (        #CG: This if statement says that if the player is moving right and is the scroll area width from the right or if the player is moving left and is the scroll area width from the left to make the offset value equal to the players x velocity which will create scrolling effect
+    # TD: Check for trophy collision and set the game_over flag
+        if player.handle_collision(trophy):
+            game_over = True
+
+        if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel > 0) or (
                 (player.rect.left - offset_x <= scroll_area_width) and player.x_vel < 0):
             offset_x += player.x_vel
 
-    pygame.quit()                                                          #CG: This line and the line below will quit the Python program if the game is stopped
+# TD: Tried to end the game after the game loop
+    pygame.quit()
     quit()
 
 
-if __name__ == "__main__":                                                 #CG: This line makes the main function run only if the game is run but, if something is imported from the game it will not run the entire game
+
+
+
+if __name__ == "__main__":
     main(window)

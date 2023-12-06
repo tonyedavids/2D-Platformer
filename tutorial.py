@@ -2,7 +2,7 @@ import os       #TD: Operating System Module that lets us connect to computer
 import random   #TD: Random Module for numbers
 import math     #TD: Math Module for numbers
 import pygame
-from asyncio import wait    #TD: ATTEMPT TO TRY AND ADD WAITS BEFO RE ENDING PYGAME
+from asyncio import wait    #TD: ATTEMPT TO TRY AND ADD WAITS BEFORE ENDING PYGAME
 from os import listdir 
 from os.path import isfile, join
 pygame.init()       #TD: Starts the Pygame Window
@@ -11,13 +11,13 @@ pygame.display.set_caption("Platformer")    #TD: caption for out display window
 
 
 WIDTH, HEIGHT = 1000, 800                                           #TD: Dimensions of our game window
-FPS = 60                                                           #TD: Refresh rate of our game window
+FPS = 60                                                            #TD: Refresh rate of our game window
 PLAYER_VEL = 6                                                      #TD: Player Velocty, the higher the faster the character 
 
 PATH = r'C:\Coding Projects\2D-Platformer\assets'                   #TD: The directory that I used inorder to collect objects for game
 window = pygame.display.set_mode((WIDTH, HEIGHT))                   #TD: Using the Width & Height variables
 
-def flip(sprites):
+def flip(sprites):                                                  #CG: Sprites originally all face the right so this function will flip the sprites so they will face the left if the player is facing the left
     return [pygame.transform.flip(sprite, True, False) for sprite in sprites]       
 
 
@@ -230,7 +230,7 @@ class Trophy(Object):
             print("Player touched the trophy! Game Over!")
             self.touched = True  # TD: Set the flag when trophy is touched
             pygame.quit()
-            quit()
+            quit()          #TD: SERVERAL ATTEMPTS TO END THE WINDOW WHEN TOUCHED 
 
     def is_touched(self):
         return self.touched
