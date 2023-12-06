@@ -5,9 +5,12 @@ import pygame
 from os import listdir 
 from os.path import isfile, join
 pygame.init()       #TD: Starts the Pygame Window
-pygame.display.set_caption("Best Platformer")    #TD: caption for out display window
+pygame.display.set_caption("Best Platformer")    #TD: caption for our display window
 
-
+"""
+TD as Tonye Davids
+CG as Caleb Gourzong
+"""
 WIDTH, HEIGHT = 1000, 800                                           #TD: Dimensions of our game window
 FPS = 60                                                            #TD: Refresh rate of our game window
 PLAYER_VEL = 6                                                      #TD: Player Velocty, the higher the faster the character 
@@ -113,14 +116,14 @@ class Player(pygame.sprite.Sprite):                                           #T
         self.fall_count += 1                                                #CG: This will make you fall permanently unless you are colliding with an object simulating gravity in the game
         self.update_sprite()                                                #CG: Will update sprite needed and draw function will display needed sprite
 
-    def landed(self):                                                       #CG: Function that handles the players' properties when landed
-        self.fall_count = 0                                                 #CG: This erases any accumulated gravity once the player has landed
-        self.y_vel = 0                                                      #CG. Sets the player's y velocity to zero so they do not keep falling 
-        self.jump_count = 0                                                 #CG: Resets the player's jump count so they can jump 
+    def landed(self):                                                       #YM: Function that handles the players' properties when landed
+        self.fall_count = 0                                                 #YM: This erases any accumulated gravity once the player has landed
+        self.y_vel = 0                                                      #YM. Sets the player's y velocity to zero so they do not keep falling 
+        self.jump_count = 0                                                 #YM: Resets the player's jump count so they can jump 
 
-    def hit_head(self):                                                     #CG: A function that handles players' properties when hitting the undersides of objects
+    def hit_head(self):                                                     #YM: A function that handles players' properties when hitting the undersides of objects
         self.count = 0                                                      
-        self.y_vel *= -1                                                    #CG: This will push the player off the bottom of the block allowing them to begin falling again
+        self.y_vel *= -1                                                    #YM: This will push the player off the bottom of the block allowing them to begin falling again
 
     def update_sprite(self):                                                #CG: This function will change what sprite is appearing by calling different images from the sprite dictionary depending on the player's current position or action
         sprite_sheet = "idle"                                               #CG: If the player is not moving or doing anything it will call a frame of the idle sprite sheet
@@ -144,9 +147,9 @@ class Player(pygame.sprite.Sprite):                                           #T
         self.animation_count += 1
         self.update()
 
-    def update(self):                                                       #CG: Updates rectangle that is the player depending on the sprite that is currently being displayed
-        self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))#CG: If the sprite is slightly larger or smaller this will update the rectangle that is acting as the player's hitbox
-        self.mask = pygame.mask.from_surface(self.sprite)                   #CG: Mask is a map of every pixel in the sprite and with this, it will allow pixel collision instead of collision with the entirety of the player rectangle
+    def update(self):                                                       #YM: Updates rectangle that is the player depending on the sprite that is currently being displayed
+        self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))#YM: If the sprite is slightly larger or smaller this will update the rectangle that is acting as the player's hitbox
+        self.mask = pygame.mask.from_surface(self.sprite)                   #YM: Mask is a map of every pixel in the sprite and with this, it will allow pixel collision instead of collision with the entirety of the player rectangle
 
     def draw(self, win, offset_x):                                          #CG: Will draw all visual changes
         win.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))        #CG: Will draw the sprites as they are updated
@@ -160,16 +163,16 @@ class Player(pygame.sprite.Sprite):                                           #T
 
 
 
-class Object(pygame.sprite.Sprite):                                         #CG: Object class used to define dimensions and properties of objects to be later used to allow player collision
+class Object(pygame.sprite.Sprite):                                         #CL: Object class used to define dimensions and properties of objects to be later used to allow player collision
     def __init__(self, x, y, width, height, name=None):
-        super().__init__()                                                  #CG: This initializes the parent class
-        self.rect = pygame.Rect(x, y, width, height)                        #CG: Used to define the rectangle of space the object will take up
-        self.image = pygame.Surface((width, height), pygame.SRCALPHA)       #CG: Makes the surface the sprites will be loaded on transparent
-        self.width = width                                                  #CG: declares the width of the object
-        self.height = height                                                #CG: declares the height of the object
-        self.name = name                                                    #CG: declares the name of the object to be called
+        super().__init__()                                                  #CL: This initializes the parent class
+        self.rect = pygame.Rect(x, y, width, height)                        #CL: Used to define the rectangle of space the object will take up
+        self.image = pygame.Surface((width, height), pygame.SRCALPHA)       #CL: Makes the surface the sprites will be loaded on transparent
+        self.width = width                                                  #CL: declares the width of the object
+        self.height = height                                                #CL: declares the height of the object
+        self.name = name                                                    #CL: declares the name of the object to be called
 
-    def draw(self, win, offset_x):                                          #CG: This function will draw the objects in the game and will change them when the screen scrolls or the players change position
+    def draw(self, win, offset_x):                                          #CL: This function will draw the objects in the game and will change them when the screen scrolls or the players change position
         win.blit(self.image, (self.rect.x - offset_x, self.rect.y))
 
 class Trophy(Object):                                                       #TD: Trophy Class 
@@ -186,6 +189,7 @@ class Trophy(Object):                                                       #TD:
             self.touched = True                                             # TD: Set the flag when trophy is touched
             pygame.quit()
             quit()
+
 class Block(Object):                                                        #CG: Class for the blocks/terrain the player will stand on using the properties from the object class above
     def __init__(self, x, y, size):
         super().__init__(x, y, size, size)                                  #CG: Initializes parent class. Uses size twice to make the block a square
@@ -280,17 +284,17 @@ def collide(player, objects, dx):                                   #CG: Functio
     return collided_object
 
 
-def handle_move(player, objects):                              #CG: This function will change the coordinates of the player based on the keys pressed
-    keys = pygame.key.get_pressed()                            #CG: A built-in function that checks which keys are being pressed
+def handle_move(player, objects):                              #WD: This function will change the coordinates of the player based on the keys pressed
+    keys = pygame.key.get_pressed()                            #WD: A built-in function that checks which keys are being pressed
 
-    player.x_vel = 0                                           #CG: Must set velocity to initial of 0 so that the x velocity isn't permanently set to the direction you move in and will be reset to zero so you stop moving when a key is not being pressed
-    collide_left = collide(player, objects, -PLAYER_VEL * 2)   #CG: Checks if it is being collided with on the left and moves them to the right at the same rate as they are moving left
-    collide_right = collide(player, objects, PLAYER_VEL * 2)   #CG: Checks if it is being collided with on the right and moves them to the left at the same rate as they are moving right
+    player.x_vel = 0                                           #WD: Must set velocity to initial of 0 so that the x velocity isn't permanently set to the direction you move in and will be reset to zero so you stop moving when a key is not being pressed
+    collide_left = collide(player, objects, -PLAYER_VEL * 2)   #WD: Checks if it is being collided with on the left and moves them to the right at the same rate as they are moving left
+    collide_right = collide(player, objects, PLAYER_VEL * 2)   #WD: Checks if it is being collided with on the right and moves them to the left at the same rate as they are moving right
 
-    if keys[pygame.K_LEFT] and not collide_left:               #CG: checks if the left arrow keys are being pressed and that the player is not currently colliding with anything to the left of it
-        player.move_left(PLAYER_VEL)                           #CG: If true makes the character move to the left at the speed previously chosen by Player_vel
-    if keys[pygame.K_RIGHT] and not collide_right:             #CG: checks if the right arrow keys are being pressed and that the player is not currently colliding with anything to the right of it
-        player.move_right(PLAYER_VEL)                          #CG: If true makes the character move to the right at the speed previously chosen by Player_vel
+    if keys[pygame.K_LEFT] and not collide_left:               #WD: checks if the left arrow keys are being pressed and that the player is not currently colliding with anything to the left of it
+        player.move_left(PLAYER_VEL)                           #WD: If true makes the character move to the left at the speed previously chosen by Player_vel
+    if keys[pygame.K_RIGHT] and not collide_right:             #WD: checks if the right arrow keys are being pressed and that the player is not currently colliding with anything to the right of it
+        player.move_right(PLAYER_VEL)                          #WD: If true makes the character move to the right at the speed previously chosen by Player_vel
 
     vertical_collide = handle_vertical_collision(player, objects, player.y_vel) #CG: Calls vertical collision to be used in another variable
     to_check = [collide_left, collide_right, *vertical_collide]                 #CG: This is a master list of all three collision functions so that the handle move function knows how to alter player position based on collision            
